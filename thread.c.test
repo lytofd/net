@@ -1,0 +1,50 @@
+#include <thread.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/prctl.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <linux/unistd.h>
+
+typedef struct 
+{
+    int i;
+    int j;
+}my_adt;
+void* thread_rountine1(void *arg)
+{
+    my_adt *cnt = (my_adt*)arg;
+    int i;
+    for (i=0; i<5; ++i)
+        printf("%d-hello\n",cnt->i);
+    free(arg);
+    return 0;
+}
+
+int main(void)
+{
+    pthread_t pid[3];
+    int ret;
+    int i;   
+    for (i=0; i<3; ++i)
+    {   
+        my_adt *p = malloc(sizeof(my_adt));
+        p->i = i;
+        if ((ret=pthread_create(&pid[i],NULL,thread_rountine1,(void*)p)) != 0)
+        {   
+            fprintf(stderr,"pthread_create:%s\n",strerror(ret));
+            exit(1);
+        }   
+    }   
+
+    for (i=0; i<3; ++i)
+    {   
+        if ((ret=pthread_join(pid[i],NULL)) != 0)
+        {   
+            fprintf(stderr,"pthreads_join",strerror(ret));
+            exit(1);
+        }   
+    }   
+
+    return 0;
+}    
